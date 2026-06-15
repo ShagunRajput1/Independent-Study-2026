@@ -1,4 +1,6 @@
-# Independant Study 2026 -- DNA Disease Predictor
+# Independant-Study-2026
+
+#  DNA Disease Predictor
 
 A bioinformatics pipeline that reads a DNA sequence, translates it into a protein, and uses a neural network built from scratch to predict the pathogenicity of known mutations linked to that gene.
 

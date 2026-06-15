@@ -1,0 +1,102 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
+
+demo = pd.read_sas("DEMO_J.XPT")
+pbde = pd.read_sas("PBCD_J.XPT")
+chol = pd.read_sas("TCHOL_J.XPT")
+
+print("files loaded")
+
+print(pbde.columns)
+
+pbde = pbde.rename(columns={"SAMPLEID": "SEQN"})
+
+df = demo.merge(pbde, on="SEQN")
+df = df.merge(chol, on="SEQN")
+
+print("merged size:", df.shape)
+
+df = df[[
+    "RIDAGEYR",   # age
+    "RIAGENDR",   # sex
+    "LBXBPB",     # lead
+    "LBXBCD",     # cadmium
+    "LBXTHG",     # mercury
+    "LBXBSE",     # selenium
+    "LBXBMN",     # manganese
+    "LBXTC"       # cholesterol
+]]
+
+df["metal_total"] = df[[
+    "LBXBPB",
+    "LBXBCD",
+    "LBXTHG",
+    "LBXBSE",
+    "LBXBMN"
+]].sum(axis=1)
+
+df = df.dropna()
+
+print(df.describe())
+print(df.corr())
+print(len(df))
+
+# Define features for the model
+X = df[[
+    "LBXBPB",
+    "LBXBCD",
+    "LBXTHG",
+    "LBXBSE",
+    "LBXBMN",
+    "RIDAGEYR",
+    "RIAGENDR"
+]]
+y = df["LBXTC"]
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Linear Regression Model
+
+
+linear_model = LinearRegression()
+linear_model.fit(X_train, y_train)
+
+
+
+linear_pred = linear_model.predict(X_test)
+print("Linear Regression R²:", r2_score(y_test, linear_pred))
+
+# Visualization
+
+
+plt.scatter(df["LBXBPB"], df["LBXTC"])
+plt.xlabel("Lead concentration")
+plt.ylabel("Cholesterol")
+plt.show()
+
+# Random Forest Model
+
+
+rf_model = RandomForestRegressor(
+    n_estimators=200,
+    random_state=42
+)
+
+rf_model.fit(X_train, y_train)
+
+rf_pred = rf_model.predict(X_test)
+
+print("Random Forest R²:", r2_score(y_test, rf_pred))
+print("Random Forest RMSE:", mean_squared_error(y_test, rf_pred, squared=False))
+
+# Feature Importance
+importance = pd.Series(rf_model.feature_importances_, index=X.columns)
+print("\nFeature Importance:")
+print(importance.sort_values(ascending=False))
