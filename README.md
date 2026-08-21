@@ -1,4 +1,4 @@
-# Independant-Study-2026
+# Independent-Study-2026
 
 #  DNA Disease Predictor
 
